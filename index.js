@@ -3,6 +3,8 @@
 //
 // **License:** MIT
 
+/*jshint -W018 */
+
 var Thunk = require('thunks')();
 var crc32 = require('crc').crc32;
 var sid = require('./lib/sid');
@@ -17,6 +19,17 @@ var defaultCookie = {
   maxAge: 24 * 60 * 60 * 1000 // ms
 };
 
+function hashSession(session, sessionId) {
+  return '' + crc32.signed(JSON.stringify(session) + sessionId);
+}
+
+function extend(dst, src) {
+  for (var key in src) {
+    if (!dst.hasOwnProperty(key)) dst[key] = src[key];
+  }
+  return dst;
+}
+
 /**
  * setup session
  * @param {Object} options
@@ -30,38 +43,34 @@ var defaultCookie = {
  *   - [`genSid`] you can use your own generator for sid
  */
 
-module.exports = function session(options) {
+module.exports = function (options) {
   options = options || {};
   var sessionKey = options.key || 'toa.sid';
-  var client = options.store || new MemoryStore();
+  var store = new Store(options.store || new MemoryStore(), options.prefix || 'toa:sess:');
+  var cookie = extend(options.cookie || {}, defaultCookie);
 
-  var store = new Store(client, {
-    ttl: options.ttl,
-    prefix: options.prefix || 'toa:sess:'
-  });
+  if (cookie.expires) {
+    cookie.expires = new Date(cookie.expires);
+    if (!cookie.expires.getTime() || cookie.expires <= new Date()) throw new Error('Invalid cookie.expires date');
+  }
 
   var genSid = options.genSid || sid;
-
-  var cookie = options.cookie || {};
-  extend(cookie, defaultCookie);
+  var ttl = options.ttl > 0 ? +options.ttl : defaultCookie.maxAge;
+  if (cookie.maxAge > 0) ttl = cookie.maxAge;
 
   var storeAvailable = true;
 
-  store.on('disconnect', function() {
+  store.on('disconnect', function () {
     storeAvailable = false;
   });
 
-  store.on('connect', function() {
+  store.on('connect', function () {
     storeAvailable = true;
   });
 
-  // save empty session hash for compare
-  var EMPTY_SESSION_HASH = hash(generateSession());
-
-  function generateSession() {
+  function genSession() {
     var session = {};
-    session.cookie = {};
-    extend(session.cookie, cookie);
+    session.ttl = cookie.expires ? cookie.expires - new Date() : ttl;
     return session;
   }
 
@@ -79,27 +88,35 @@ module.exports = function session(options) {
    *   get session from store
    */
   function getSession(ctx) {
+    var signedCookie = ctx.cookies.get(sessionKey, {signed: cookie.signed}) || '';
+    signedCookie = signedCookie.split('.');
+
     return Thunk.call(ctx)(function () {
       if (!storeAvailable) throw new Error('session store is not available');
-      this.sessionId = this.cookies.get(sessionKey, {signed: cookie.signed});
-
-      if (!this.sessionId) return generateSession();
-      else return store.get(this.sessionId);
+      if (signedCookie[0]) return store.get(signedCookie[0]);
     })(function (err, session) {
       if (err) throw err;
+      var sessionId, originalHash;
+
+      if (session) {
+        sessionId = signedCookie[0];
+        originalHash = signedCookie[1];
+        if (hashSession(session, sessionId) !== originalHash) session = null;
+      }
+
       if (!session) {
-        session = generateSession();
-        // remove session id if no session
-        this.sessionId = null;
-        this.cookies.set(sessionKey, null);
+        session = genSession();
+        sessionId = genSid();
+        originalHash = hashSession(session, sessionId);
       }
 
       return {
-        status: 200,
-        originalHash: this.sessionId && hash(session),
-        session: session
+        session: session,
+        sessionId: sessionId,
+        originalHash: originalHash,
+        isNew: originalHash !== signedCookie[1]
       };
-    })
+    });
   }
 
   /**
@@ -107,50 +124,55 @@ module.exports = function session(options) {
    *   if session === null; delete it from store
    *   if session is modified, update cookie and store
    */
-  function refreshSession(ctx, session, originalHash) {
+  function refreshSession(ctx, session, originalHash, isNew) {
     return Thunk.call(ctx)(function () {
+      if (!session && isNew) return;
+      var newCookie = extend({}, cookie);
       //delete session
-      if (!session) {
-        if (this.sessionId) return store.destroy(this.sessionId);
-        return;
+      if (!session || !(session.ttl > 0)) {
+        this.cookies.set(sessionKey, null, newCookie);
+        return store.destroy(this.sessionId);
       }
 
-      var newHash = hash(session);
-      // if new session and not modified, just ignore
-      if (!options.allowEmpty && !this.sessionId && newHash === EMPTY_SESSION_HASH) return;
-
+      var newHash = hashSession(session, this.sessionId);
       // rolling session will always reset cookie and session
       if (!options.rolling && newHash === originalHash) return;
 
-      this.sessionId = this.sessionId || genSid();
-
-      this.cookies.set(sessionKey, this.sessionId, session.cookie);
+      newCookie.maxAge = session.ttl;
+      this.cookies.set(sessionKey, this.sessionId + '.' + newHash, newCookie);
       return store.set(this.sessionId, session);
     });
   }
 
-  return function (callback) {
-    var ctx = this;
-    this.sessionStore = store;
-
+  return function toaSession(callback) {
     if (this.session || !matchPath(this)) return callback();
 
     return getSession(this)(function (err, res) {
       if (err) throw err;
-      this.session = res.session;
+      var session = res.session;
+
+      Object.defineProperty(this, 'session', {
+        enumerable: true,
+        configurable: false,
+        get: function () {
+          return session;
+        },
+        set: function (value) {
+          if (value !== null) return;
+          session = null;
+        }
+      });
+
+      Object.defineProperty(this, 'sessionId', {
+        enumerable: true,
+        configurable: false,
+        writable: false,
+        value: res.sessionId
+      });
+
       this.onPreEnd = function (done) {
-        refreshSession(this, this.session, res.originalHash)(done);
+        refreshSession(this, this.session, res.originalHash, res.isNew)(done);
       };
     })(callback);
   };
 };
-
-function hash(sess) {
-  return crc32.signed(JSON.stringify(sess));
-}
-
-function extend(dst, src) {
-  for (var key in src) {
-    if (!dst.hasOwnProperty(key)) dst[key] = src[key];
-  }
-}

@@ -3,13 +3,20 @@
 //
 // **License:** MIT
 var Toa = require('toa');
-var session = require('../index');
+var session = require('../index')();
 
 
 var app = Toa(function (Thunk) {
-  this.session.name = 'test';
-  this.body = this.session;
+  if (this.path === '/favicon.ico') return;
+  
+  else if (this.path === '/delete') this.session = null;
+  else this.session.name = 'test';
+  this.body = {
+    path: this.path,
+    session: this.session,
+    sessionId: this.sessionId
+  };
 });
 
-app.use(session());
+app.use(session);
 app.listen(3000);
