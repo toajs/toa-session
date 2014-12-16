@@ -8,7 +8,7 @@ var session = require('../index')();
 
 var app = Toa(function (Thunk) {
   if (this.path === '/favicon.ico') return;
-  
+
   else if (this.path === '/delete') this.session = null;
   else this.session.name = 'test';
   this.body = {

@@ -39,13 +39,16 @@ function extend(dst, src) {
  *   - [`prefix`] session prefix for store, defaulting to `toa:sess:`
  *   - [`cookie`] session cookie settings, defaulting to
  *     {path: '/', httpOnly: true, maxAge: null, rewrite: true, signed: true}
- *   - [`rolling`]  rolling session, always reset the cookie and sessions, default is false
+ *   - [`rolling`]  rolling session, always reset the cookie and sessions, default to `false`
+ *   - [`sidSize`] random bytes's length to generate sid,
+     sid included timestamp hash and CRC bytes, so it's length is long than sidSize, default to `24`
  *   - [`genSid`] you can use your own generator for sid
  */
 
 module.exports = function (options) {
   options = options || {};
   var sessionKey = options.key || 'toa.sid';
+  var sidSize = options.sidSize >= 8 ? Math.floor(options.sidSize) : 24;
   var store = new Store(options.store || new MemoryStore(), options.prefix || 'toa:sess:');
   var cookie = extend(options.cookie || {}, defaultCookie);
 
@@ -106,7 +109,7 @@ module.exports = function (options) {
 
       if (!session) {
         session = genSession();
-        sessionId = genSid();
+        sessionId = genSid(sidSize);
         originalHash = hashSession(session, sessionId);
       }
 

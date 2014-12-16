@@ -1,4 +1,4 @@
-toa-session v1.0.0 [![Build Status](https://travis-ci.org/toajs/toa-session.svg)](https://travis-ci.org/toajs/toa-session)
+toa-session v1.0.1 [![Build Status](https://travis-ci.org/toajs/toa-session.svg)](https://travis-ci.org/toajs/toa-session)
 ====
 Session middleware for toa, inspired by [generic-session](https://github.com/koajs/generic-session).
 
@@ -68,13 +68,14 @@ var session = require('toa-session');
 ```
 ### app.use(session([options]))
 
-- `options.key`: `String`, Default `toa.sid`, cookie name.
-- `options.store`: `object`, session store instance
-- `options.ttl`: `Number`, Default `24 * 60 * 60 * 1000`, store ttl in `ms`.
-- `options.prefix`: `String`, Default `toa:sess:`, session prefix for store.
+- `options.key`: `String`, cookie name, default to `toa.sid`.
+- `options.store`: `object`, session store instance.
+- `options.ttl`: `Number`, store ttl in `ms`, default to `24 * 60 * 60 * 1000`.
+- `options.prefix`: `String`, session prefix for store, default to `toa:sess:`.
 - `options.cookie`: `Object`, session cookie settings.
-- `options.rolling`: `Boolean`, Default `false`,  rolling session, always reset the cookie and sessions.
-- `options.genSid`: `Function`, you can use your own generator for sid.
+- `options.rolling`: `Boolean`,  rolling session, always reset the cookie and sessions, default to `false`.
+- `options.sidSize`: `Number`, random bytes's length to generate sid, sid included timestamp hash and CRC bytes, so it's length is long than sidSize, default to `24`.
+- `options.genSid`: `Function`, you can use your own generator for sid, default to `./lib/sid.js`.
 
 * Store can be any Object that has the methods `set`, `get`, `destroy` like  [memoryStore](https://github.com/toajs/toa-session/blob/master/lib/memory.js).
 
