@@ -2,6 +2,8 @@
 // **Github:** https://github.com/toajs/toa-session
 //
 // **License:** MIT
+//
+// inspired by https://github.com/koajs/generic-session
 
 /*jshint -W018 */
 

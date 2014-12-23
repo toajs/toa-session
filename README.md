@@ -1,4 +1,4 @@
-toa-session v1.0.1 [![Build Status](https://travis-ci.org/toajs/toa-session.svg)](https://travis-ci.org/toajs/toa-session)
+toa-session v1.0.2 [![Build Status](https://travis-ci.org/toajs/toa-session.svg)](https://travis-ci.org/toajs/toa-session)
 ====
 Session middleware for toa, inspired by [generic-session](https://github.com/koajs/generic-session).
 
