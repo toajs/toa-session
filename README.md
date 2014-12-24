@@ -1,6 +1,9 @@
-toa-session v1.0.2 [![Build Status](https://travis-ci.org/toajs/toa-session.svg)](https://travis-ci.org/toajs/toa-session)
+toa-session
 ====
 Session middleware for toa, inspired by [generic-session](https://github.com/koajs/generic-session).
+
+[![NPM version][npm-image]][npm-url]
+[![Build Status][travis-image]][travis-url]
 
 ## [toa](https://github.com/toajs/toa)
 
@@ -109,3 +112,9 @@ And use these events to report the store's status.
 
 ## Licences
 (The MIT License)
+
+[npm-url]: https://npmjs.org/package/toa-session
+[npm-image]: http://img.shields.io/npm/v/toa-session.svg
+
+[travis-url]: https://travis-ci.org/toajs/toa-session
+[travis-image]: http://img.shields.io/travis/toajs/toa-session.svg

@@ -75,7 +75,7 @@ module.exports = function (options) {
 
   function genSession() {
     var session = {};
-    session.ttl = cookie.expires ? cookie.expires - new Date() : ttl;
+    session.ttl = cookie.expires ? cookie.expires - Date.now() : ttl;
     return session;
   }
 
@@ -83,7 +83,8 @@ module.exports = function (options) {
    * check url match cookie's path
    */
   function matchPath(ctx) {
-    return ctx.path.indexOf(cookie.path) === 0;
+    var path = ctx.path;
+    return path.indexOf(cookie.path) === 0 && path !== '/favicon.ico';
   }
 
   /**
