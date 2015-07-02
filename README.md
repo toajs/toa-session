@@ -11,48 +11,45 @@ Session middleware for toa, inspired by [generic-session](https://github.com/koa
 
 **use as middleware:**
 ```js
-var Toa = require('toa');
-var session = require('../index')();
+var Toa = require('toa')
+var session = require('toa-session')()
 
+var app = Toa(function () {
+  if (this.path === '/favicon.ico') return
+  if (this.path === '/delete') this.session = null
+  else this.session.name = 'test'
 
-var app = Toa(function (Thunk) {
-  if (this.path === '/favicon.ico') return;
-
-  else if (this.path === '/delete') this.session = null;
-  else this.session.name = 'test';
   this.body = {
     path: this.path,
     session: this.session,
     sessionId: this.sessionId
-  };
-});
+  }
+})
 
-app.use(session);
-app.listen(3000);
+app.use(session)
+app.listen(3000)
 ```
 
 **use as module:**
 ```js
-var Toa = require('toa');
-var session = require('../index')();
+var Toa = require('toa')
+var session = require('toa-session')()
 
+var app = Toa(function *() {
+  if (this.path === '/favicon.ico') return
+  yield session
 
-var app = Toa(function (Thunk) {
-  if (this.path === '/favicon.ico') return;
+  if (this.path === '/delete') this.session = null
+  else this.session.name = 'test'
 
-  return Thunk.call(this, session)(function (err) {
-    if (this.path === '/delete') this.session = null;
-    else this.session.name = 'test';
+  this.body = {
+    path: this.path,
+    session: this.session,
+    sessionId: this.sessionId
+  }
+})
 
-    this.body = {
-      path: this.path,
-      session: this.session,
-      sessionId: this.sessionId
-    };
-  });
-});
-
-app.listen(3000);
+app.listen(3000)
 ```
 
 * After adding session middleware, you can use `this.session` to set or get the sessions.
