@@ -4,6 +4,7 @@ Session middleware for toa, inspired by [generic-session](https://github.com/koa
 
 [![NPM version][npm-image]][npm-url]
 [![Build Status][travis-image]][travis-url]
+[![Downloads][downloads-image]][downloads-url]
 
 ## [toa](https://github.com/toajs/toa)
 
@@ -115,3 +116,6 @@ And use these events to report the store's status.
 
 [travis-url]: https://travis-ci.org/toajs/toa-session
 [travis-image]: http://img.shields.io/travis/toajs/toa-session.svg
+
+[downloads-url]: https://npmjs.org/package/toa-session
+[downloads-image]: http://img.shields.io/npm/dm/toa-session.svg?style=flat-square

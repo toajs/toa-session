@@ -3,7 +3,7 @@
 //
 // **License:** MIT
 var Toa = require('toa')
-var session = require('../index')()
+var session = require('..')()
 
 var app = Toa(function () {
   if (this.path === '/favicon.ico') return
