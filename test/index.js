@@ -13,7 +13,10 @@ var session = require('..')
 
 tman.suite('toa-session', function () {
   tman.suite('should have session cookie', function () {
-    var app = Toa(function () {
+    var app = new Toa()
+    app.keys = ['test']
+    app.use(session())
+    app.use(function () {
       this.session.name = 'test'
       this.body = {
         path: this.path,
@@ -21,7 +24,6 @@ tman.suite('toa-session', function () {
         sessionId: this.sessionId
       }
     })
-    app.use(session())
 
     var server = app.listen()
     var agent = request(server)
@@ -67,7 +69,10 @@ tman.suite('toa-session', function () {
   })
 
   tman.suite('update and delete session', function () {
-    var app = Toa(function () {
+    var app = new Toa()
+    app.keys = ['test']
+    app.use(session())
+    app.use(function () {
       this.session.name = 'test'
       this.session.path = this.path
       if (this.path === '/delete') this.session = null
@@ -77,7 +82,6 @@ tman.suite('toa-session', function () {
         sessionId: this.sessionId
       }
     })
-    app.use(session())
 
     var server = app.listen()
     var agent = request(server)
@@ -152,7 +156,10 @@ tman.suite('toa-session', function () {
 
   tman.suite('with options', function () {
     tman.it('custom key', function () {
-      var app = Toa(function () {
+      var app = new Toa()
+      app.keys = ['test']
+      app.use(session({key: 'test.sid'}))
+      app.use(function () {
         this.session.name = 'test'
         this.session.path = this.path
         if (this.path === '/delete') this.session = null
@@ -162,7 +169,6 @@ tman.suite('toa-session', function () {
           sessionId: this.sessionId
         }
       })
-      app.use(session({key: 'test.sid'}))
 
       var server = app.listen()
       var agent = request(server)
@@ -178,7 +184,12 @@ tman.suite('toa-session', function () {
     })
 
     tman.it('custom cookie', function () {
-      var app = Toa(function () {
+      var app = new Toa()
+      app.keys = ['test']
+      app.use(session({
+        cookie: {path: '/test'}
+      }))
+      app.use(function () {
         if (this.path.indexOf('/test') !== 0) {
           assert(this.session === undefined)
         } else {
@@ -192,9 +203,6 @@ tman.suite('toa-session', function () {
           sessionId: this.sessionId
         }
       })
-      app.use(session({
-        cookie: {path: '/test'}
-      }))
 
       var server = app.listen()
       var agent = request(server)
