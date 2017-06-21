@@ -3,17 +3,17 @@
 //
 // **License:** MIT
 
-var assert = require('assert')
-var request = require('supertest')
-var thunk = require('thunks')()
-var Toa = require('toa')
-var tman = require('tman')
-var cookie = require('cookie')
-var session = require('..')
+const assert = require('assert')
+const request = require('supertest')
+const thunk = require('thunks')()
+const Toa = require('toa')
+const tman = require('tman')
+const cookie = require('cookie')
+const session = require('..')
 
 tman.suite('toa-session', function () {
   tman.suite('should have session cookie', function () {
-    var app = new Toa()
+    let app = new Toa()
     app.keys = ['test']
     app.use(session())
     app.use(function () {
@@ -25,15 +25,15 @@ tman.suite('toa-session', function () {
       }
     })
 
-    var server = app.listen()
-    var agent = request(server)
-    var sessionId = ''
-    var sessionCookie = ''
+    let server = app.listen()
+    let agent = request(server)
+    let sessionId = ''
+    let sessionCookie = ''
 
     tman.it('generate new session cookie', function () {
       return agent.get('/')
         .expect(function (res) {
-          var cookies = cookie.parse(res.headers['set-cookie'][0])
+          let cookies = cookie.parse(res.headers['set-cookie'][0])
           sessionId = cookies['toa.sid'].split('.')[0]
           sessionCookie = 'toa.sid=' + cookies['toa.sid'] + '; '
           sessionCookie += 'toa.sid.sig=' + cookie.parse(res.headers['set-cookie'][1])['toa.sid.sig']
@@ -69,7 +69,7 @@ tman.suite('toa-session', function () {
   })
 
   tman.suite('update and delete session', function () {
-    var app = new Toa()
+    let app = new Toa()
     app.keys = ['test']
     app.use(session())
     app.use(function () {
@@ -83,15 +83,15 @@ tman.suite('toa-session', function () {
       }
     })
 
-    var server = app.listen()
-    var agent = request(server)
-    var sessionId = ''
-    var sessionCookie = ''
+    let server = app.listen()
+    let agent = request(server)
+    let sessionId = ''
+    let sessionCookie = ''
 
     tman.it('generate new session cookie', function () {
       return agent.get('/')
         .expect(function (res) {
-          var cookies = cookie.parse(res.headers['set-cookie'][0])
+          let cookies = cookie.parse(res.headers['set-cookie'][0])
           sessionId = cookies['toa.sid'].split('.')[0]
           sessionCookie = 'toa.sid=' + cookies['toa.sid'] + '; '
           sessionCookie += 'toa.sid.sig=' + cookie.parse(res.headers['set-cookie'][1])['toa.sid.sig']
@@ -107,7 +107,7 @@ tman.suite('toa-session', function () {
       return agent.get('/update')
         .set('Cookie', sessionCookie)
         .expect(function (res) {
-          var cookies = cookie.parse(res.headers['set-cookie'][0])
+          let cookies = cookie.parse(res.headers['set-cookie'][0])
           assert(cookies['toa.sid'].split('.')[0] === sessionId)
           sessionCookie = 'toa.sid=' + cookies['toa.sid'] + '; '
           sessionCookie += 'toa.sid.sig=' + cookie.parse(res.headers['set-cookie'][1])['toa.sid.sig']
@@ -121,7 +121,7 @@ tman.suite('toa-session', function () {
       return agent.get('/')
         .set('Cookie', sessionCookie + 'damagedBytes')
         .expect(function (res) {
-          var cookies = cookie.parse(res.headers['set-cookie'][0])
+          let cookies = cookie.parse(res.headers['set-cookie'][0])
           assert(cookies['toa.sid'].split('.')[0] !== sessionId)
           sessionId = cookies['toa.sid'].split('.')[0]
           sessionCookie = 'toa.sid=' + cookies['toa.sid'] + '; '
@@ -146,7 +146,7 @@ tman.suite('toa-session', function () {
       return agent.get('/delete')
         .set('Cookie', sessionCookie)
         .expect(function (res) {
-          var cookies = cookie.parse(res.headers['set-cookie'][0])
+          let cookies = cookie.parse(res.headers['set-cookie'][0])
           assert(cookies['toa.sid'] === '')
           assert(res.body.sessionId === sessionId)
           assert(res.body.path = '/delete')
@@ -156,7 +156,7 @@ tman.suite('toa-session', function () {
 
   tman.suite('with options', function () {
     tman.it('custom key', function () {
-      var app = new Toa()
+      let app = new Toa()
       app.keys = ['test']
       app.use(session({key: 'test.sid'}))
       app.use(function () {
@@ -170,13 +170,13 @@ tman.suite('toa-session', function () {
         }
       })
 
-      var server = app.listen()
-      var agent = request(server)
+      let server = app.listen()
+      let agent = request(server)
 
       return agent.get('/')
         .expect(function (res) {
-          var cookies = cookie.parse(res.headers['set-cookie'][0])
-          var sessionId = cookies['test.sid'].split('.')[0]
+          let cookies = cookie.parse(res.headers['set-cookie'][0])
+          let sessionId = cookies['test.sid'].split('.')[0]
           assert(cookies.path === '/')
           assert(res.body.sessionId === sessionId)
           assert(res.body.path = '/')
@@ -184,7 +184,7 @@ tman.suite('toa-session', function () {
     })
 
     tman.it('custom cookie', function () {
-      var app = new Toa()
+      let app = new Toa()
       app.keys = ['test']
       app.use(session({
         cookie: {path: '/test'}
@@ -204,8 +204,8 @@ tman.suite('toa-session', function () {
         }
       })
 
-      var server = app.listen()
-      var agent = request(server)
+      let server = app.listen()
+      let agent = request(server)
 
       return thunk.seq(
         agent.get('/')
@@ -214,8 +214,8 @@ tman.suite('toa-session', function () {
           }),
         agent.get('/test/go')
           .expect(function (res) {
-            var cookies = cookie.parse(res.headers['set-cookie'][0])
-            var sessionId = cookies['toa.sid'].split('.')[0]
+            let cookies = cookie.parse(res.headers['set-cookie'][0])
+            let sessionId = cookies['toa.sid'].split('.')[0]
             assert(cookies.path === '/test')
             assert(res.body.sessionId === sessionId)
             assert(res.body.path = '/test/go')

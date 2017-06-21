@@ -2,10 +2,11 @@
 // **Github:** https://github.com/toajs/toa
 //
 // **License:** MIT
-var Toa = require('toa')
-var session = require('..')()
+const Toa = require('toa')
+const session = require('..')()
 
-var app = Toa(function () {
+const app = new Toa()
+app.use(function () {
   if (this.path === '/favicon.ico') return
 
   else if (this.path === '/delete') this.session = null
